@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>群聊</title>
+
+<!--    <script type="text/javascript" src="js/jquery/jquery.min.js"></script>-->
+
+    <script type="text/javascript" src="json/emoji.js"></script>
+
+    <script type="text/javascript" src="js/vue/vue.js"></script>
+    <script type="text/javascript" src="js/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="js/element-ui/lib/theme-chalk/index.css">
+
+    <script type="text/javascript" src="js/sockjs-client/sockjs.min.js"></script>
+    <script type="text/javascript" src="js/stomp-websocket/stomp.min.js"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+        }
+        html,body{height:100%}
+
+        #app{
+            height: 100%;
+        }
+        #app .el-container{
+            height: 100%;
+        }
+        #app #message .el-alert__content{
+            width: 100%;
+        }
+
+        #app .el-popover{
+            height:200px;
+            width:400px;
+            overflow: scroll;
+            overflow-x:auto;
+        }
+
+        #app .main{
+            text-align: center;
+            line-height: 10px;
+        }
+
+        #app .chatIcon{
+            text-align: left;
+        }
+
+    </style>
+
+    <style>
+        .self-message{
+            background-color: #85ce61;
+            color: wheat;
+            border-radius:15px;
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .other-message{
+            background-color: #8cc5ff;
+            color: black;
+            border-radius:15px;
+            display: inline-block;
+            margin-left: 20px;
+        }
+
+        .message p{
+            padding: 2px 12px;
+        }
+
+        .message p.name{
+            font-size: 1px;
+            margin-left: 40px;
+            color: #72767b;
+        }
+        .message p.content{
+            font-size: 16px;
+        }
+
+        .chatIcon {
+            padding: 0 10px;
+            font-size: 25px;
+        }
+        .emotionList{
+            display: flex;
+            flex-wrap: wrap;
+            padding:5px;
+        }
+        .emotionItem{
+            width:10%;
+            font-size:20px;
+            text-align:center;
+        }
+        .emotionSelect{
+            border: transparent;
+        }
+
+    </style>
+</head>
+<body style="height: 100%">
+<div id="app">
+    <el-container>
+        <el-header>
+            <span v-show="connected">
+                {{name}} [在线]
+            </span>
+            <el-button type="primary" v-show="connected" round @click="disconnect">断开连接</el-button>
+        </el-header>
+        <el-main class="main">
+
+            <el-container>
+                <el-aside id="message" width="100%">
+                    <template v-for="msg in recentMsg" >
+                        <el-alert
+                                :key="msg.key"
+                                type="success"
+                                :closable="false">
+                            <template slot='title'>
+                                <div class="message" :style="{float: msg.name === name ? 'right' : 'left'}">
+                                    <p v-if="msg.name !== name" class="name">{{msg.name}}</p>
+                                    <div  :class="[msg.name === name ? 'self-message' : 'other-message']">
+                                        <p class="content">{{msg.content}}</p>
+                                    </div>
+                                    <el-avatar :style="{float: msg.name === name ? 'right' : 'left'}" :size="45" :src="'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
+                                </div>
+                            </template>
+                        </el-alert>
+                    </template>
+                </el-aside>
+                <el-main>
+                    <el-drawer
+                            title="历史记录"
+                            :visible.sync="drawer"
+                            :with-header="false">
+                        <span>{{historyMsg}}</span>
+                    </el-drawer>
+                    <el-button style="float: right; margin-top: 20%;" @click="drawer=true" icon="el-icon-d-arrow-left" circle></el-button>
+                </el-main>
+                <el-footer height="300px">
+                    <el-input v-model="name" v-show="!connected" placeholder="请输入用户名：" @keyup.enter.native="connect"></el-input>
+                    <el-button type="primary" v-show="!connected" round @click="connect">连接</el-button>
+                    <div class="chatIcon">
+                        <el-popover placement="top-start" width="400" trigger="click" class="emoBox">
+                            <div class="emotionList">
+                                <a href="javascript:void(0);" @click="getEmo(index)" v-for="(item,index) in faceList" :key="index" class="emotionItem">{{item}}</a>
+                            </div>
+                            <el-button
+                                    class="emotionSelect"
+                                    icon="iconfont el-icon-apple"
+                                    slot="reference"
+                            ></el-button>
+                        </el-popover>
+                    </div>
+                    <el-input
+                            v-model="content"
+                            class="chatText"
+                            resize="none"
+                            type="textarea"
+                            id='textarea'
+                            rows="5"
+                            placeholder="请输入聊天内容："
+                            @keyup.enter.native="send"
+                    ></el-input>
+                    <el-button type="primary" round @click="send">发送</el-button>
+                </el-footer>
+            </el-container>
+        </el-main>
+    </el-container>
+</div>
+
+<script type="text/javascript" src="app.js?v=1"></script>
+
+</body>
+</html>
